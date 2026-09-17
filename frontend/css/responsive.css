@@ -1,0 +1,215 @@
+@media (max-width: 850px) {
+  .container {
+    width: min(100% - 28px, 600px);
+  }
+  .links {
+    display: none;
+  }
+  .links.open {
+    display: flex;
+    position: absolute;
+    top: 72px;
+    left: 0;
+    right: 0;
+    z-index: 6;
+    flex-direction: column;
+    gap: 0;
+    margin: 0;
+    padding: 8px 14px 14px;
+    background: rgba(11, 11, 11, 0.98);
+    border-bottom: 1px solid var(--line);
+  }
+  .links.open a {
+    padding: 13px 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .menu {
+    display: block;
+    order: -1;
+  }
+  .nav {
+    height: 72px;
+    gap: 12px;
+  }
+  .logo {
+    font-size: 23px;
+  }
+  .logo small {
+    font-size: 7px;
+  }
+  .actions {
+    margin-left: auto;
+    gap: 4px;
+  }
+  .login-link {
+    padding: 8px 9px;
+    font-size: 9px;
+  }
+  .account-icon {
+    display: none;
+  }
+  .hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .hero-copy.container {
+    width: calc(100% - 28px);
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+  .hero-copy {
+    padding: 75px 0 25px;
+  }
+  .hero-art {
+    min-height: 330px;
+  }
+  .hero h1 {
+    font-size: 60px;
+  }
+  .benefits {
+    grid-template-columns: 1fr 1fr;
+  }
+  .benefit {
+    padding: 22px 15px;
+  }
+  .categories {
+    grid-template-columns: 1fr;
+  }
+  .products {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .card-info {
+    padding: 12px;
+  }
+  .card h3 {
+    font-size: 16px;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  #detail > div {
+    display: block !important;
+  }
+  #detail > div > img {
+    display: block;
+    width: min(100%, 520px) !important;
+    max-height: 520px !important;
+    margin: 0 auto 32px;
+  }
+  #cart > div {
+    flex-wrap: wrap;
+  }
+  #cart > div > img {
+    flex: 0 0 72px;
+  }
+  .form-shell {
+    margin: 35px auto;
+  }
+  .form-shell h1 {
+    font-size: 38px;
+  }
+  .footer-grid > div:first-child {
+    grid-column: 1/-1;
+  }
+  section {
+    padding: 55px 0;
+  }
+  .section-head h2 {
+    font-size: 30px;
+  }
+  .btn {
+    padding: 13px 15px;
+  }
+  .btn.alt {
+    margin-left: 3px;
+  }
+}
+@media (min-width: 851px) {
+  .hero-copy.container {
+    width: calc(100% - 40px);
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+}
+@media (max-width: 600px) {
+  .container {
+    width: calc(100% - 28px);
+  }
+  .topbar {
+    padding: 9px 12px;
+    font-size: 9px;
+    letter-spacing: 1.2px;
+  }
+  .section-head {
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .section-head h1 {
+    font-size: 36px;
+  }
+  .category {
+    min-height: 240px;
+    padding: 25px;
+  }
+  .category h3 {
+    font-size: 35px;
+  }
+  .offer {
+    padding: 36px 14px;
+  }
+  .offer h2 {
+    font-size: 31px;
+  }
+  .btn {
+    min-height: 42px;
+  }
+}
+@media (max-width: 420px) {
+  .logo {
+    letter-spacing: 3px;
+  }
+  .login-link {
+    padding: 8px 7px;
+    letter-spacing: 0.8px;
+  }
+  .hero h1 {
+    font-size: 52px;
+  }
+  .hero-art {
+    min-height: 280px;
+  }
+  .product-hero {
+    width: 190px;
+    height: 260px;
+  }
+  .products {
+    grid-template-columns: 1fr;
+  }
+}
+@media (orientation: landscape) and (max-width: 850px) {
+  .hero {
+    grid-template-columns: 1fr 0.85fr;
+  }
+  .hero-copy {
+    padding: 45px 0 25px;
+  }
+  .hero-art {
+    min-height: 380px;
+  }
+}
+@media (max-width: 380px) {
+  .hero h1 {
+    font-size: 51px;
+  }
+  .benefits {
+    grid-template-columns: 1fr;
+  }
+  .products {
+    grid-template-columns: 1fr;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr;
+  }
+}

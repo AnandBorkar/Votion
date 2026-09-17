@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Order Confirmed | VOTION</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+  </head>
+  <body>
+    <main
+      class="container"
+      style="
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 28px;
+        align-items: start;
+      "
+    >
+      <section class="form-shell" style="text-align: left">
+        <div class="gold-icon" style="font-size: 48px">✦</div>
+        <div class="eyebrow">ORDER PLACED SUCCESSFULLY</div>
+        <h1>Thank you for shopping with VOTION.</h1>
+        <p style="color: var(--muted)">Your order ID is</p>
+        <h2 id="order" style="color: var(--gold)"></h2>
+        <div
+          id="order-details"
+          style="margin-top: 22px; line-height: 1.8; color: var(--muted)"
+        ></div>
+        <a
+          class="btn"
+          href="index.html"
+          style="margin-top: 18px; display: inline-block"
+          >Return home</a
+        >
+      </section>
+      <aside class="form-shell" style="padding: 24px">
+        <div class="eyebrow">DELIVERY DETAILS</div>
+        <div
+          id="delivery-box"
+          style="line-height: 1.8; color: var(--muted)"
+        ></div>
+      </aside>
+    </main>
+    <script src="js/config.js"></script>
+    <script>
+      const orderId =
+        new URLSearchParams(location.search).get("id") || "VOTION ORDER";
+      order.textContent = orderId;
+
+      async function loadOrder() {
+        try {
+          const response = await fetch(
+            `${window.VOTION_API}/orders/${orderId}`,
+          );
+          if (!response.ok) throw new Error("Order details unavailable");
+          const order = await response.json();
+          const itemList =
+            order.products
+              ?.map(
+                (item) => `
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);">
+              <span>${item.name} × ${item.quantity}</span>
+              <strong>₹${(item.price * item.quantity).toLocaleString("en-IN")}</strong>
+            </div>
+          `,
+              )
+              .join("") || "";
+          const address = `${order.address || ""}, ${order.city || ""}, ${order.state || ""} - ${order.pincode || ""}`;
+          orderDetails.innerHTML = `
+            <strong>Items:</strong><br>${itemList}
+            <div style="margin-top:12px;">
+              <strong>Subtotal:</strong> ₹${(order.subtotal || 0).toLocaleString("en-IN")}<br>
+              <strong>Shipping:</strong> ${order.shipping ? `₹${order.shipping.toLocaleString("en-IN")}` : "Free"}<br>
+              <strong>Total:</strong> ₹${(order.totalAmount || 0).toLocaleString("en-IN")}
+            </div>
+          `;
+          deliveryBox.innerHTML = `
+            <strong>${order.customerName || "Customer"}</strong><br>
+            ${order.email || ""}<br>
+            ${order.phone || ""}<br>
+            ${address}
+          `;
+        } catch (error) {
+          orderDetails.innerHTML =
+            '<div style="color:var(--muted)">Unable to fetch order details right now.</div>';
+          deliveryBox.innerHTML =
+            '<div style="color:var(--muted)">Delivery details will appear once the order is available.</div>';
+        }
+      }
+      loadOrder();
+    </script>
+  </body>
+</html>

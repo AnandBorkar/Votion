@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Shop | VOTION</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+  </head>
+  <body>
+    <header class="header">
+      <nav class="nav container">
+        <button class="icon-btn menu" data-menu>☰</button
+        ><a class="logo" href="index.html"
+          >VOTION<small>WATCHES · PERFUMES · LIFESTYLE</small></a
+        >
+        <div class="links">
+          <a href="index.html">Home</a
+          ><a href="shop.html?category=watch">Watches</a
+          ><a href="shop.html?category=perfume">Perfumes</a>
+        </div>
+        <div class="actions">
+          <a class="login-link" href="login.html">Sign in</a
+          ><a class="icon-btn" href="cart.html"
+            >▱<span class="count" data-cart-count>0</span></a
+          >
+        </div>
+      </nav>
+    </header>
+    <main class="container">
+      <section>
+        <div class="section-head"><h1>Shop the collection</h1></div>
+        <div
+          style="display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap"
+        >
+          <input
+            id="search"
+            placeholder="Search products..."
+            style="
+              flex: 1;
+              min-width: 180px;
+              background: var(--charcoal);
+              border: 1px solid var(--line);
+              padding: 14px;
+              color: var(--ivory);
+            "
+          /><select
+            id="group"
+            style="
+              background: var(--charcoal);
+              color: var(--ivory);
+              border: 1px solid var(--line);
+              padding: 10px;
+            "
+          >
+            <option value="">All groups</option></select
+          ><select
+            id="category"
+            style="
+              background: var(--charcoal);
+              color: var(--ivory);
+              border: 1px solid var(--line);
+              padding: 10px;
+            "
+          >
+            <option value="">All categories</option></select
+          ><select
+            id="gender"
+            style="
+              background: var(--charcoal);
+              color: var(--ivory);
+              border: 1px solid var(--line);
+              padding: 10px;
+            "
+          >
+            <option value="">All genders</option>
+            <option value="Men">Men</option>
+            <option value="Women">Women</option>
+            <option value="Unisex">Unisex</option>
+            <option value="Kids">Kids</option></select
+          ><select
+            id="brand"
+            style="
+              background: var(--charcoal);
+              color: var(--ivory);
+              border: 1px solid var(--line);
+              padding: 10px;
+            "
+          >
+            <option value="">All brands</option>
+          </select>
+        </div>
+        <div class="products" id="products">
+          <div class="empty">Loading collection...</div>
+        </div>
+      </section>
+    </main>
+    <div class="toast"></div>
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+      const params = new URLSearchParams(location.search);
+      category.value = params.get("category") || "";
+      group.value = params.get("group") || "";
+      gender.value = params.get("gender") || "";
+      brand.value = params.get("brand") || "";
+
+      async function loadCatalogFilters() {
+        const token = localStorage.votionAdmin || "";
+        const headers = { Authorization: `Bearer ${token}` };
+        const [groupsRes, brandsRes, categoriesRes] = await Promise.all([
+          fetch(`${window.VOTION_API}/admin/catalog?type=group`, { headers }),
+          fetch(`${window.VOTION_API}/admin/catalog?type=brand`, { headers }),
+          fetch(`${window.VOTION_API}/admin/catalog?type=category`, {
+            headers,
+          }),
+        ]);
+
+        const groups = groupsRes.ok ? await groupsRes.json() : [];
+        const brands = brandsRes.ok ? await brandsRes.json() : [];
+        const categories = categoriesRes.ok ? await categoriesRes.json() : [];
+
+        group.innerHTML = ['<option value="">All groups</option>']
+          .concat(
+            groups.map(
+              (item) => `<option value="${item.name}">${item.name}</option>`,
+            ),
+          )
+          .join("");
+        brand.innerHTML = ['<option value="">All brands</option>']
+          .concat(
+            brands.map(
+              (item) => `<option value="${item.name}">${item.name}</option>`,
+            ),
+          )
+          .join("");
+        category.innerHTML = ['<option value="">All categories</option>']
+          .concat(
+            categories.map(
+              (item) => `<option value="${item.name}">${item.name}</option>`,
+            ),
+          )
+          .join("");
+        category.value = params.get("category") || "";
+        group.value = params.get("group") || "";
+        gender.value = params.get("gender") || "";
+        brand.value = params.get("brand") || "";
+      }
+
+      function refresh() {
+        const params = new URLSearchParams({
+          category: category.value,
+          group: group.value,
+          gender: gender.value,
+          brand: brand.value,
+          search: search.value,
+        });
+        loadProducts("products", `?${params.toString()}`);
+      }
+
+      search.oninput = refresh;
+      group.onchange = refresh;
+      category.onchange = refresh;
+      gender.onchange = refresh;
+      brand.onchange = refresh;
+      loadCatalogFilters()
+        .then(refresh)
+        .catch(() => refresh());
+    </script>
+  </body>
+</html>
