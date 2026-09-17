@@ -1,0 +1,227 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Catalog Management | VOTION</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="admin.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
+  </head>
+  <body>
+    <main class="container">
+      <section class="form-shell">
+        <div class="section-head">
+          <h1>Catalog management</h1>
+          <a class="btn alt" href="dashboard.html">Dashboard</a>
+        </div>
+
+        <form class="form" id="catalogForm">
+          <select id="catalogType" name="type">
+            <option value="group">Group</option>
+            <option value="category">Category</option>
+            <option value="brand">Brand</option>
+          </select>
+          <input id="catalogName" name="name" placeholder="Name" required />
+          <select id="catalogGroup" name="group" style="display: none">
+            <option value="">Select group</option>
+          </select>
+          <button class="btn" type="submit" id="catalogSubmit">Save</button>
+          <button
+            class="btn alt"
+            type="button"
+            id="catalogCancel"
+            style="display: none"
+          >
+            Cancel
+          </button>
+          <p id="catalogMessage"></p>
+        </form>
+
+        <div id="catalogList" class="products"></div>
+      </section>
+    </main>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/admin.js"></script>
+    <script>
+      const token = localStorage.votionAdmin || "";
+      const headers = { Authorization: `Bearer ${token}` };
+      const $ = (selector) => document.querySelector(selector);
+
+      function renderCatalog(items) {
+        const list = items.length
+          ? items
+              .map(
+                (item) => `
+                  <article class="card">
+                    <div class="card-info">
+                      <small>${item.type} ${item.group ? `· ${item.group}` : ""}</small>
+                      <h3>${item.name}</h3>
+                      <p>${item.isActive ? "Active" : "Inactive"}</p>
+                      <div class="admin-actions">
+                        <button class="btn" type="button" onclick="editCatalog('${item._id}')">Edit</button>
+                        <button class="btn" type="button" onclick="toggleCatalog('${item._id}')">${item.isActive ? "Deactivate" : "Activate"}</button>
+                        <button class="btn danger" type="button" onclick="deleteCatalog('${item._id}')">Delete</button>
+                      </div>
+                    </div>
+                  </article>
+                `,
+              )
+              .join("")
+          : '<div class="empty">No catalog items found.</div>';
+        $("#catalogList").innerHTML = list;
+      }
+
+      async function loadGroups() {
+        const response = await fetch(`${VOTION_API}/admin/catalog?type=group`, {
+          headers,
+        });
+        if (!response.ok) return;
+        const groups = await response.json();
+        const options = ['<option value="">Select group</option>']
+          .concat(
+            groups.map(
+              (group) => `<option value="${group.name}">${group.name}</option>`,
+            ),
+          )
+          .join("");
+        $("#catalogGroup").innerHTML = options;
+      }
+
+      async function loadCatalog() {
+        const response = await fetch(
+          `${VOTION_API}/admin/catalog?includeInactive=true`,
+          { headers },
+        );
+        if (!response.ok)
+          throw new Error(
+            (await response.json()).message || "Unable to load catalog",
+          );
+        const data = await response.json();
+        renderCatalog(data);
+      }
+
+      $("#catalogType").addEventListener("change", async (event) => {
+        const value = event.target.value;
+        const isCategory = value === "category";
+        $("#catalogGroup").style.display = isCategory ? "block" : "none";
+        if (isCategory) await loadGroups();
+      });
+
+      async function submitCatalogForm(event) {
+        event.preventDefault();
+        const formData = Object.fromEntries(new FormData($("#catalogForm")));
+        const payload = {
+          type: formData.type,
+          name: formData.name,
+        };
+
+        if (formData.type === "category") {
+          payload.group = formData.group;
+        }
+
+        const method = currentCatalogEditId ? "PUT" : "POST";
+        const url = currentCatalogEditId
+          ? `${VOTION_API}/admin/catalog/${currentCatalogEditId}`
+          : `${VOTION_API}/admin/catalog`;
+
+        const response = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json", ...headers },
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          $("#catalogMessage").textContent =
+            result.message || "Unable to save catalog item";
+          return;
+        }
+
+        currentCatalogEditId = null;
+        $("#catalogForm").reset();
+        $("#catalogType").value = "group";
+        $("#catalogGroup").style.display = "none";
+        $("#catalogCancel").style.display = "none";
+        $("#catalogSubmit").textContent = "Save";
+        $("#catalogMessage").textContent = "Catalog item saved";
+        await loadCatalog();
+      }
+
+      let currentCatalogEditId = null;
+
+      $("#catalogForm").addEventListener("submit", submitCatalogForm);
+
+      window.toggleCatalog = async function (id) {
+        const response = await fetch(
+          `${VOTION_API}/admin/catalog/${id}/toggle`,
+          {
+            method: "PATCH",
+            headers,
+          },
+        );
+        if (response.ok) {
+          await loadCatalog();
+          return;
+        }
+        $("#catalogMessage").textContent =
+          (await response.json()).message || "Unable to update catalog status";
+      };
+
+      window.editCatalog = async function (id) {
+        const response = await fetch(
+          `${VOTION_API}/admin/catalog?includeInactive=true`,
+          {
+            headers,
+          },
+        );
+        if (!response.ok) return;
+        const items = await response.json();
+        const item = items.find((entry) => entry._id === id);
+        if (!item) return;
+
+        currentCatalogEditId = id;
+        $("#catalogType").value = item.type;
+        $("#catalogName").value = item.name;
+        $("#catalogGroup").style.display =
+          item.type === "category" ? "block" : "none";
+        $("#catalogSubmit").textContent = "Update";
+        $("#catalogCancel").style.display = "inline-block";
+        if (item.type === "category") {
+          await loadGroups();
+          $("#catalogGroup").value = item.group || "";
+        }
+      };
+
+      window.deleteCatalog = async function (id) {
+        if (!confirm("Delete this catalog item?")) return;
+        const response = await fetch(`${VOTION_API}/admin/catalog/${id}`, {
+          method: "DELETE",
+          headers,
+        });
+        if (response.ok) {
+          await loadCatalog();
+          return;
+        }
+        $("#catalogMessage").textContent =
+          (await response.json()).message || "Unable to delete catalog item";
+      };
+
+      $("#catalogCancel").addEventListener("click", () => {
+        currentCatalogEditId = null;
+        $("#catalogForm").reset();
+        $("#catalogType").value = "group";
+        $("#catalogGroup").style.display = "none";
+        $("#catalogCancel").style.display = "none";
+        $("#catalogSubmit").textContent = "Save";
+      });
+
+      loadGroups().catch(() => {});
+      loadCatalog().catch((error) => {
+        $("#catalogList").innerHTML =
+          `<div class="empty">${error.message}</div>`;
+      });
+    </script>
+  </body>
+</html>

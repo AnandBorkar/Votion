@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Your Bag | VOTION</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+  </head>
+  <body>
+    <header class="header">
+      <nav class="nav container">
+        <a class="logo" href="index.html"
+          >VOTION<small>WATCHES · PERFUMES · LIFESTYLE</small></a
+        ><a class="icon-btn" href="shop.html">Continue shopping</a>
+      </nav>
+    </header>
+    <main class="container">
+      <section>
+        <div class="section-head"><h1>Your bag</h1></div>
+        <div id="cart"></div>
+      </section>
+    </main>
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/cart.js"></script>
+    <script>
+      function render() {
+        const el = document.getElementById("cart"),
+          cart = getCart();
+        if (!cart.length) {
+          el.innerHTML =
+            '<div class="empty">Your cart is empty.<br><br><a class="btn" href="shop.html">Browse collection</a></div>';
+          return;
+        }
+        let subtotal = cart.reduce(
+            (s, p) => s + (p.discountPrice || p.price) * p.quantity,
+            0,
+          ),
+          shipping = subtotal >= 999 ? 0 : 99;
+        el.innerHTML = `${cart.map((p, i) => `<div style="display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--line);align-items:center"><img src="${p.images[0]}" style="width:80px;height:95px;object-fit:cover"><div style="flex:1"><h3>${p.name}</h3><p>₹${(p.discountPrice || p.price).toLocaleString("en-IN")} · Qty <button onclick="change(${i},-1)">−</button> ${p.quantity} <button onclick="change(${i},1)">+</button></p></div><button class="icon-btn" onclick="removeItem(${i})">×</button></div>`).join("")}<div style="max-width:360px;margin:30px 0 0 auto;line-height:2"><p>Subtotal <b style="float:right">₹${subtotal.toLocaleString("en-IN")}</b></p><p>Shipping <b style="float:right">${shipping ? "₹99" : "FREE"}</b></p><hr><p>Total <b style="float:right">₹${(subtotal + shipping).toLocaleString("en-IN")}</b></p><a class="btn" style="display:block;text-align:center" href="checkout.html">Proceed to checkout</a></div>`;
+      }
+      function change(i, n) {
+        const c = getCart();
+        c[i].quantity = Math.max(1, c[i].quantity + n);
+        saveCart(c);
+        render();
+      }
+      function removeItem(i) {
+        const c = getCart();
+        c.splice(i, 1);
+        saveCart(c);
+        render();
+      }
+      render();
+    </script>
+  </body>
+</html>

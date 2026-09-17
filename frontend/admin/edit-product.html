@@ -1,0 +1,176 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Edit Product | VOTION</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="admin.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
+    <script src="../js/config.js"></script>
+    <script src="../js/admin.js" defer></script>
+  </head>
+  <body>
+    <main class="container">
+      <section class="form-shell">
+        <h1>Edit product</h1>
+        <form class="form" id="form">
+          <input name="name" placeholder="Product name" required />
+          <select name="group" id="groupSelect" required>
+            <option value="">Select group</option>
+          </select>
+          <select name="gender" id="genderSelect" required>
+            <option value="Men">Men</option>
+            <option value="Women">Women</option>
+            <option value="Unisex">Unisex</option>
+            <option value="Kids">Kids</option>
+          </select>
+          <select name="brand" id="brandSelect" required>
+            <option value="">Select brand</option>
+          </select>
+          <textarea
+            name="shortDescription"
+            placeholder="Short description"
+          ></textarea>
+          <textarea name="description" placeholder="Description"></textarea>
+          <input
+            name="price"
+            type="number"
+            min="0.01"
+            step="0.01"
+            placeholder="Price"
+            required
+          /><input name="discountPrice" type="number" /><input
+            id="imageFile"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            min="0"
+            step="0.01"
+            placeholder="Discount price"
+          /><input
+            name="stock"
+            type="number"
+            min="0"
+            step="1"
+            placeholder="Stock"
+            required
+          /><input
+            name="images"
+            placeholder="Image URL (comma separated)"
+          /><label><input name="isActive" type="checkbox" /> Published</label
+          ><label><input name="isFeatured" type="checkbox" /> Featured</label
+          ><label
+            ><input name="isBestSeller" type="checkbox" /> Best seller</label
+          ><label
+            ><input name="isNewArrival" type="checkbox" /> New arrival</label
+          ><button class="btn">Save changes</button>
+          <p id="message"></p>
+        </form>
+        <a class="btn alt" href="products.html">Back to products</a>
+      </section>
+    </main>
+  </body>
+  <script>
+    const id = new URLSearchParams(location.search).get("id");
+    const token = localStorage.votionAdmin || "";
+    const authHeaders = { Authorization: `Bearer ${token}` };
+
+    async function loadCatalogOptions() {
+      const [groupsRes, brandsRes] = await Promise.all([
+        fetch(`${VOTION_API}/admin/catalog?type=group`, {
+          headers: authHeaders,
+        }),
+        fetch(`${VOTION_API}/admin/catalog?type=brand`, {
+          headers: authHeaders,
+        }),
+      ]);
+
+      const groups = groupsRes.ok ? await groupsRes.json() : [];
+      const brands = brandsRes.ok ? await brandsRes.json() : [];
+
+      groupSelect.innerHTML = ['<option value="">Select group</option>']
+        .concat(
+          groups.map(
+            (item) => `<option value="${item.name}">${item.name}</option>`,
+          ),
+        )
+        .join("");
+
+      brandSelect.innerHTML = ['<option value="">Select brand</option>']
+        .concat(
+          brands.map(
+            (item) => `<option value="${item.name}">${item.name}</option>`,
+          ),
+        )
+        .join("");
+    }
+
+    fetch(`${VOTION_API}/products/admin/${id}`, { headers: authHeaders })
+      .then((response) => {
+        if (!response.ok) throw new Error("Product not found");
+        return response.json();
+      })
+      .then(async (product) => {
+        await loadCatalogOptions();
+        Object.entries(product).forEach(([key, value]) => {
+          const field = form.elements[key];
+          if (!field) return;
+          if (field.type === "checkbox") field.checked = Boolean(value);
+          else if (key === "images") field.value = (value || []).join(", ");
+          else field.value = value ?? "";
+        });
+        if (product.group) groupSelect.value = product.group;
+        if (product.gender) genderSelect.value = product.gender;
+        if (product.brand) brandSelect.value = product.brand;
+      })
+      .catch((error) => {
+        message.textContent = error.message;
+      });
+    form.onsubmit = async (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(form));
+      const imageFile = document.getElementById("imageFile").files[0];
+      if (imageFile) {
+        message.textContent = "Uploading image...";
+        const uploadData = new FormData();
+        uploadData.append("image", imageFile);
+        const uploadResponse = await fetch(`${VOTION_API}/uploads`, {
+          method: "POST",
+          headers: authHeaders,
+          body: uploadData,
+        });
+        const uploadResult = await uploadResponse.json();
+        if (!uploadResponse.ok) {
+          message.textContent = uploadResult.message;
+          return;
+        }
+        data.images = uploadResult.url;
+      }
+      ["isActive", "isFeatured", "isBestSeller", "isNewArrival"].forEach(
+        (key) => {
+          data[key] = form.elements[key].checked;
+        },
+      );
+      data.price = Number(data.price);
+      data.discountPrice = data.discountPrice
+        ? Number(data.discountPrice)
+        : undefined;
+      data.stock = Number(data.stock);
+      data.images = data.images
+        ? data.images
+            .split(",")
+            .map((image) => image.trim())
+            .filter(Boolean)
+        : [];
+      const response = await fetch(`${VOTION_API}/products/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if (response.ok) location.href = "products.html";
+      else message.textContent = result.message || "Unable to update product";
+    };
+  </script>
+</html>

@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Dashboard | VOTION</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="admin.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
+  </head>
+  <body>
+    <main class="container">
+      <section>
+        <div class="section-head">
+          <h1>VOTION Admin</h1>
+          <button
+            class="btn"
+            onclick="
+              localStorage.removeItem('votionAdmin');
+              location.href = 'login.html';
+            "
+          >
+            Logout
+          </button>
+        </div>
+        <div class="categories">
+          <a class="category" href="add-product.html"
+            ><h3>Add product</h3>
+            <p>Create a new catalog item.</p></a
+          >
+          <a class="category" href="products.html"
+            ><h3>Products</h3>
+            <p>Manage your catalog and stock.</p></a
+          ><a class="category" href="catalog.html"
+            ><h3>Catalog</h3>
+            <p>Add groups, categories, and brands.</p></a
+          ><a class="category" href="orders.html"
+            ><h3>Orders</h3>
+            <p>Review customers and order status.</p></a
+          >
+        </div>
+      </section>
+    </main>
+  </body>
+  <script src="../js/admin.js"></script>
+</html>

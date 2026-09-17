@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Product | VOTION</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+  </head>
+  <body>
+    <header class="header">
+      <nav class="nav container">
+        <a class="logo" href="index.html"
+          >VOTION<small>WATCHES · PERFUMES · LIFESTYLE</small></a
+        ><a class="icon-btn" href="cart.html"
+          >▱<span class="count" data-cart-count>0</span></a
+        >
+      </nav>
+    </header>
+    <main class="container">
+      <section id="detail"><div class="empty">Loading product...</div></section>
+    </main>
+    <div class="toast"></div>
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/product.js"></script>
+    <script>
+      fetch(
+        `${VOTION_APIg}/products/${new URLSearchParams(location.search).get("id")}`,
+      )
+        .then((r) => r.json())
+        .then((p) => {
+          document.title = `${p.name} | VOTION`;
+          detail.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:55px;align-items:center"><img src="${p.images[0]}" alt="${p.name}" style="width:100%;max-height:650px;object-fit:cover"><div><div class="eyebrow">${p.category} · ${p.brand}</div><h1 style="font:500 clamp(36px,5vw,68px) 'Playfair Display'">${p.name}</h1><p class="rating">★ ${p.rating} (${p.reviewCount} reviews)</p><p style="color:var(--muted);line-height:1.8">${p.description}</p><h2>₹${(p.discountPrice || p.price).toLocaleString("en-IN")} <span class="was">₹${p.price.toLocaleString("en-IN")}</span></h2><p style="color:${p.stock ? "var(--success)" : "var(--burgundy)"}">${p.stock ? "In stock · " + p.stock + " available" : "Out of stock"}</p><button class="btn" ${p.stock ? "" : "disabled"} onclick='addToCart(${JSON.stringify(p)})'>Add to cart</button></div></div>`;
+        })
+        .catch(
+          () =>
+            (detail.innerHTML = '<div class="empty">Product not found.</div>'),
+        );
+    </script>
+  </body>
+</html>

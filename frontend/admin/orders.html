@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Orders | VOTION</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="admin.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
+  </head>
+  <body>
+    <main class="container">
+      <section>
+        <div class="section-head">
+          <h1>Orders</h1>
+          <a class="btn" href="dashboard.html">Dashboard</a>
+        </div>
+        <div id="orders" class="empty">Loading...</div>
+      </section>
+    </main>
+    <script src="../js/config.js"></script>
+    <script src="../js/admin.js"></script>
+    <script>
+      fetch(`${VOTION_API}/orders`, {
+        headers: { Authorization: `Bearer ${localStorage.votionAdmin || ""}` },
+      })
+        .then((r) => {
+          if (!r.ok) throw new Error("Unable to load orders");
+          return r.json();
+        })
+        .then((os) => {
+          orders.innerHTML = os.length
+            ? os
+                .map((o) => {
+                  const products = (o.products || [])
+                    .map(
+                      (p) =>
+                        `<li>${p.name} × ${p.quantity} — ₹${((p.price || 0) * (p.quantity || 1)).toLocaleString("en-IN")}</li>`,
+                    )
+                    .join("");
+
+                  return `
+                    <div style="border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px;background:#fffaf0;">
+                      <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+                        <div>
+                          <b>${o.orderId}</b><br>
+                          <span>${o.customerName}</span>
+                        </div>
+                        <div style="text-align:right;">
+                          <strong>₹${(o.totalAmount || 0).toLocaleString("en-IN")}</strong><br>
+                          <small>${o.orderStatus || "Pending"}</small>
+                        </div>
+                      </div>
+
+                      <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div>
+                          <strong>Customer</strong><br>
+                          <a href="tel:${o.phone || ""}">${o.phone || "—"}</a><br>
+                          ${o.email || "—"}
+                        </div>
+                        <div>
+                          <strong>Delivery address</strong><br>
+                          ${o.address || "—"}, ${o.city || ""}, ${o.state || ""}, ${o.pincode || ""}
+                        </div>
+                      </div>
+
+                      <div style="margin-top:16px;">
+                        <strong>Products</strong>
+                        <ul style="margin:8px 0 0 18px;line-height:1.8;">
+                          ${products || "<li>No product details available</li>"}
+                        </ul>
+                      </div>
+                    </div>
+                  `;
+                })
+                .join("")
+            : "No orders found.";
+        })
+        .catch((err) => {
+          orders.innerHTML = `<div class="empty">${err.message || "Orders could not be loaded."}</div>`;
+        });
+    </script>
+  </body>
+</html>

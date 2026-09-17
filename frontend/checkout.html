@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Checkout | VOTION</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+  </head>
+  <body>
+    <header class="header">
+      <nav class="nav container">
+        <a class="logo" href="index.html"
+          >VOTION<small>WATCHES · PERFUMES · LIFESTYLE</small></a
+        >
+      </nav>
+    </header>
+    <main
+      class="container"
+      style="
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 28px;
+        align-items: start;
+      "
+    >
+      <section class="form-shell">
+        <div class="eyebrow">SECURE CHECKOUT</div>
+        <h1>Complete your order</h1>
+        <form class="form" id="checkout">
+          <input name="customerName" placeholder="Full name" required /><input
+            name="phone"
+            placeholder="Mobile number"
+            pattern="[0-9]{10}"
+            required
+          /><input
+            type="email"
+            name="email"
+            placeholder="Email address"
+            required
+          /><input
+            name="address"
+            placeholder="Complete address"
+            required
+          /><input name="city" placeholder="City" required /><input
+            name="state"
+            placeholder="State"
+            required
+          /><input
+            name="pincode"
+            placeholder="Pincode"
+            pattern="[0-9]{6}"
+            required
+          /><textarea
+            name="notes"
+            placeholder="Order notes (optional)"
+          ></textarea
+          ><label
+            ><input type="radio" name="paymentMethod" value="cod" checked />
+            Cash on delivery</label
+          ><label
+            ><input type="radio" name="paymentMethod" value="online" /> Pay
+            online</label
+          ><button class="btn" type="submit">Place order</button>
+          <p id="message" style="color: var(--muted)"></p>
+        </form>
+      </section>
+      <aside class="form-shell" style="padding: 24px">
+        <div class="eyebrow">ORDER SUMMARY</div>
+        <h2>Your items</h2>
+        <div
+          id="checkout-items"
+          style="display: grid; gap: 14px; margin-top: 18px"
+        ></div>
+        <div
+          id="delivery-preview"
+          style="
+            margin-top: 22px;
+            padding-top: 16px;
+            border-top: 1px solid var(--line);
+            line-height: 1.8;
+            color: var(--muted);
+          "
+        ></div>
+      </aside>
+    </main>
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/checkout.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+      function renderCheckoutSummary() {
+        const cart = getCart();
+        const wrap = document.getElementById("checkout-items");
+        const preview = document.getElementById("delivery-preview");
+        if (!wrap || !preview) return;
+        if (!cart.length) {
+          wrap.innerHTML = '<div class="empty">Your cart is empty.</div>';
+          preview.innerHTML =
+            '<a class="btn" href="shop.html">Browse products</a>';
+          return;
+        }
+        const subtotal = cart.reduce(
+          (sum, item) =>
+            sum + (item.discountPrice || item.price) * item.quantity,
+          0,
+        );
+        const paymentMethod =
+          document.querySelector('input[name="paymentMethod"]:checked')
+            ?.value || "cod";
+        const shipping =
+          paymentMethod === "online"
+            ? 0
+            : subtotal >= 999
+              ? 0
+              : Math.min(200, Math.max(100, Math.round(subtotal * 0.012)));
+        wrap.innerHTML = cart
+          .map(
+            (item) => `
+          <div style="display:flex;gap:12px;align-items:center;padding-bottom:10px;border-bottom:1px solid var(--line);">
+            <img src="${item.images?.[0] || "https://placehold.co/120x140/171717/F5F1E8?text=VOTION"}" alt="${item.name}" style="width:56px;height:70px;object-fit:cover;border-radius:8px;" />
+            <div style="flex:1;min-width:0;">
+              <strong style="display:block;">${item.name}</strong>
+              <small style="color:var(--muted);">Qty: ${item.quantity}</small>
+            </div>
+            <strong>₹${((item.discountPrice || item.price) * item.quantity).toLocaleString("en-IN")}</strong>
+          </div>
+        `,
+          )
+          .join("");
+        preview.innerHTML = `
+          <strong>Delivery to:</strong><br>
+          <span id="delivery-name">${checkout.customerName?.value || "Your name"}</span><br>
+          <span id="delivery-address">${checkout.address?.value || "Your address"}</span>,<br>
+          <span id="delivery-city">${checkout.city?.value || "City"}</span>, <span id="delivery-state">${checkout.state?.value || "State"}</span> - <span id="delivery-pincode">${checkout.pincode?.value || "Pincode"}</span><br>
+          <strong>Phone:</strong> ${checkout.phone?.value || ""}<br>
+          <strong>Subtotal:</strong> ₹${subtotal.toLocaleString("en-IN")}<br>
+          <strong>Shipping:</strong> ${shipping ? `₹${shipping.toLocaleString("en-IN")}` : "Free"}
+        `;
+        Array.from(checkout.elements).forEach((field) => {
+          if (field.name && field.tagName !== "BUTTON") {
+            field.addEventListener("input", renderCheckoutSummary);
+            field.addEventListener("change", renderCheckoutSummary);
+          }
+        });
+      }
+      renderCheckoutSummary();
+      checkout.onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = e.submitter;
+        btn.disabled = true;
+        message.textContent = "Preparing your order...";
+        const data = Object.fromEntries(new FormData(checkout));
+        data.items = getCart().map((p) => ({
+          productId: p._id,
+          quantity: p.quantity,
+        }));
+        try {
+          if (data.paymentMethod === "online") {
+            if (typeof Razorpay === "undefined")
+              throw Error("Online payment could not load. Please try again.");
+            const paymentResponse = await fetch(
+              `${VOTION_API}/payments/order`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+              },
+            );
+            const paymentOrder = await paymentResponse.json();
+            if (!paymentResponse.ok) throw Error(paymentOrder.message);
+            await new Promise((resolve, reject) => {
+              const gateway = new Razorpay({
+                key: paymentOrder.keyId,
+                amount: paymentOrder.amount,
+                currency: paymentOrder.currency,
+                order_id: paymentOrder.paymentOrderId,
+                name: "VOTION",
+                description: "VOTION order",
+                handler: async (payment) => {
+                  try {
+                    const confirmation = await fetch(
+                      `${VOTION_API}/payments/verify`,
+                      {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ ...data, ...payment }),
+                      },
+                    );
+                    const order = await confirmation.json();
+                    if (!confirmation.ok) throw Error(order.message);
+                    localStorage.removeItem("votion-cart");
+                    location.href = `order-success.html?id=${order.orderId}`;
+                    resolve();
+                  } catch (error) {
+                    reject(error);
+                  }
+                },
+                modal: {
+                  ondismiss: () => reject(Error("Payment was cancelled")),
+                },
+              });
+              gateway.on("payment.failed", (failure) =>
+                reject(Error(failure.error?.description || "Payment failed")),
+              );
+              gateway.open();
+            });
+            return;
+          }
+          const r = await fetch(`${VOTION_API}/orders`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+          const o = await r.json();
+          if (!r.ok) throw Error(o.message);
+          localStorage.removeItem("votion-cart");
+          location.href = `order-success.html?id=${o.orderId}`;
+        } catch (err) {
+          message.textContent = err.message;
+          btn.disabled = false;
+        }
+      };
+    </script>
+  </body>
+</html>

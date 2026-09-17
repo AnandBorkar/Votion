@@ -1,0 +1,49 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0E0E0F"/>
+      <stop offset="1" stop-color="#1B1A17"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F8E7B7"/>
+      <stop offset="0.5" stop-color="#D9B96F"/>
+      <stop offset="1" stop-color="#B98A32"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <circle cx="1340" cy="170" r="220" fill="#D9B96F" fill-opacity="0.08"/>
+  <circle cx="220" cy="760" r="280" fill="#F8E7B7" fill-opacity="0.04"/>
+
+  <g>
+    <text x="120" y="180" fill="url(#gold)" font-size="88" font-family="Georgia, 'Times New Roman', serif" letter-spacing="10">VOTION</text>
+    <text x="120" y="240" fill="#F3F3F0" font-size="30" font-family="Arial, sans-serif" letter-spacing="7">PREMIUM WATCHES &amp; PERFUMES</text>
+  </g>
+
+  <rect x="120" y="300" width="1360" height="440" rx="28" fill="#171618" stroke="#C9A45B" stroke-opacity="0.7"/>
+
+  <g>
+    <text x="180" y="380" fill="#F5F1E8" font-size="30" font-family="Arial, sans-serif" font-weight="700">Brand Overview</text>
+    <text x="180" y="425" fill="#D8D1C8" font-size="22" font-family="Arial, sans-serif">Storefront: Premium luxury retail experience for watches and fragrances</text>
+    <text x="180" y="465" fill="#D8D1C8" font-size="22" font-family="Arial, sans-serif">Business Model: Modern ecommerce with catalog, checkout, admin management</text>
+    <text x="180" y="505" fill="#D8D1C8" font-size="22" font-family="Arial, sans-serif">Platform: Static frontend + Express backend + MongoDB database</text>
+    <text x="180" y="545" fill="#D8D1C8" font-size="22" font-family="Arial, sans-serif">Hosting Setup: Render for backend, Netlify for frontend</text>
+
+    <text x="180" y="620" fill="#F5F1E8" font-size="30" font-family="Arial, sans-serif" font-weight="700">Updated Details</text>
+    <text x="180" y="665" fill="#D8D1C8" font-size="22" font-family="Arial, sans-serif">Name Updated: VOTION</text>
+    <text x="180" y="705" fill="#D8D1C8" font-size="22" font-family="Arial, sans-serif">Status: Ready for deployment setup and production environment configuration</text>
+  </g>
+
+  <g>
+    <text x="1010" y="390" fill="#F8E7B7" font-size="28" font-family="Arial, sans-serif" font-weight="700">Quick Info</text>
+    <text x="1010" y="440" fill="#F3F3F0" font-size="24" font-family="Arial, sans-serif">Admin: admin@votion.local</text>
+    <text x="1010" y="480" fill="#F3F3F0" font-size="24" font-family="Arial, sans-serif">API: http://localhost:5000/api</text>
+    <text x="1010" y="520" fill="#F3F3F0" font-size="24" font-family="Arial, sans-serif">DB: MongoDB Atlas / Local MongoDB</text>
+    <text x="1010" y="560" fill="#F3F3F0" font-size="24" font-family="Arial, sans-serif">Payments: Razorpay ready</text>
+    <text x="1010" y="600" fill="#F3F3F0" font-size="24" font-family="Arial, sans-serif">Contact: hello@votion.example</text>
+  </g>
+
+  <rect x="120" y="780" width="1360" height="28" rx="14" fill="#D9B96F" fill-opacity="0.15"/>
+  <rect x="120" y="780" width="980" height="28" rx="14" fill="url(#gold)"/>
+  <text x="120" y="860" fill="#EFE8DD" font-size="20" font-family="Arial, sans-serif" letter-spacing="3">VOTION • LUXURY RETAIL • HOSTING READY</text>
+</svg>

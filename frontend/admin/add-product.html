@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Add Product | VOTION</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="admin.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
+  </head>
+  <body>
+    <main class="container">
+      <section class="form-shell">
+        <h1>Add product</h1>
+        <form class="form" id="form">
+          <input name="name" placeholder="Product name" required />
+          <select name="group" id="groupSelect" required>
+            <option value="">Select group</option>
+          </select>
+          <select name="category" id="categorySelect" required>
+            <option value="">Select category</option>
+          </select>
+          <select name="gender" id="genderSelect" required>
+            <option value="Men">Men</option>
+            <option value="Women">Women</option>
+            <option value="Unisex" selected>Unisex</option>
+            <option value="Kids">Kids</option>
+          </select>
+          <select name="brand" id="brandSelect" required>
+            <option value="">Select brand</option>
+          </select>
+          <input name="price" type="number" placeholder="Price" required />
+          <input
+            name="discountPrice"
+            type="number"
+            placeholder="Discount price"
+          />
+          <input name="stock" type="number" placeholder="Stock" required />
+          <input name="images" placeholder="Image URL (optional)" />
+          <input
+            id="imageFile"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+          />
+          <textarea name="description" placeholder="Description"></textarea>
+          <button class="btn">Save product</button>
+          <p id="message"></p>
+        </form>
+      </section>
+    </main>
+    <script src="../js/config.js"></script>
+    <script src="../js/admin.js"></script>
+    <script>
+      const token = localStorage.votionAdmin || "";
+      const authHeaders = { Authorization: `Bearer ${token}` };
+
+      async function loadCatalogOptions() {
+        const [groupsRes, brandsRes] = await Promise.all([
+          fetch(`${VOTION_API}/admin/catalog?type=group`, {
+            headers: authHeaders,
+          }),
+          fetch(`${VOTION_API}/admin/catalog?type=brand`, {
+            headers: authHeaders,
+          }),
+        ]);
+
+        const groups = groupsRes.ok ? await groupsRes.json() : [];
+        const brands = brandsRes.ok ? await brandsRes.json() : [];
+
+        groupSelect.innerHTML = ['<option value="">Select group</option>']
+          .concat(
+            groups.map(
+              (item) => `<option value="${item.name}">${item.name}</option>`,
+            ),
+          )
+          .join("");
+
+        brandSelect.innerHTML = ['<option value="">Select brand</option>']
+          .concat(
+            brands.map(
+              (item) => `<option value="${item.name}">${item.name}</option>`,
+            ),
+          )
+          .join("");
+      }
+
+      async function loadCategoriesForGroup(selectedGroup = "") {
+        const response = await fetch(
+          `${VOTION_API}/admin/catalog?type=category&group=${encodeURIComponent(selectedGroup)}`,
+          { headers: authHeaders },
+        );
+        const categories = response.ok ? await response.json() : [];
+        categorySelect.innerHTML = ['<option value="">Select category</option>']
+          .concat(
+            categories.map(
+              (item) => `<option value="${item.name}">${item.name}</option>`,
+            ),
+          )
+          .join("");
+      }
+
+      groupSelect.addEventListener("change", (event) => {
+        loadCategoriesForGroup(event.target.value);
+      });
+
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const body = Object.fromEntries(new FormData(form));
+        const imageFile = document.getElementById("imageFile").files[0];
+        if (imageFile) {
+          message.textContent = "Uploading image...";
+          const uploadData = new FormData();
+          uploadData.append("image", imageFile);
+          const uploadResponse = await fetch(`${VOTION_API}/uploads`, {
+            method: "POST",
+            headers: authHeaders,
+            body: uploadData,
+          });
+          const uploadResult = await uploadResponse.json();
+          if (!uploadResponse.ok) {
+            message.textContent = uploadResult.message;
+            return;
+          }
+          body.images = uploadResult.url;
+        }
+        body.price = Number(body.price);
+        body.discountPrice = Number(body.discountPrice) || undefined;
+        body.stock = Number(body.stock);
+        body.images = body.images ? [body.images] : [];
+        const r = await fetch(`${VOTION_API}/products`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders,
+          },
+          body: JSON.stringify(body),
+        });
+        const data = await r.json();
+        if (r.ok) {
+          location.href = "products.html";
+        } else {
+          message.textContent = data.message;
+        }
+      };
+
+      loadCatalogOptions().catch(() => {
+        message.textContent = "Unable to load catalog options";
+      });
+    </script>
+  </body>
+</html>
